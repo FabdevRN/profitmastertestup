@@ -16,10 +16,12 @@
     <div id="appContainer" class="hidden max-w-md mx-auto bg-white p-6 rounded-xl shadow-lg mt-6">
         <div class="flex items-center justify-between border-b pb-4 mb-6">
             <div>
-                <h1 class="text-2xl font-black text-gray-900">PROFIT MASTER</h1>
+                <h1 class="text-2xl font-black text-gray-900">PRE-TAX PROFIT SUITE</h1>
                 <p id="companyName" class="text-xs font-bold text-blue-600 uppercase"></p>
             </div>
-            <div class="h-10 w-10 bg-gray-800 rounded-lg flex items-center justify-center text-white font-black text-xl">🛠️</div>
+            <div class="h-32 w-32 bg-white rounded-lg overflow-hidden flex items-center justify-center">
+                <img src="https://blog.logowiz.app/wp-content/uploads/2025/01/hexagonal-shape-gradient-hvac-services-logo-design.jpg">
+            </div>
         </div>
         
         <div id="summary" class="p-6 rounded-xl text-white shadow-lg mb-6 transition-colors duration-300 bg-green-600">
@@ -32,63 +34,108 @@
         </div>
 
         <div class="space-y-4">
-            <select id="commType" class="w-full h-12 p-3 border rounded-lg bg-white">
-                <option value="percent">Percentage (%)</option>
-                <option value="flat">Flat Fee ($)</option>
-            </select>
+            <div>
+                <select id="commType" class="w-full h-12 p-3 border rounded-lg bg-white">
+                    <option value="percent">Percentage (%)</option>
+                    <option value="flat">Flat Fee ($)</option>
+                </select>
+                <p class="text-xs font-bold text-gray-400 mt-1">Commission Type</p>
+            </div>
             <div id="inputFieldsContainer" class="grid grid-cols-2 gap-4"></div>
             <button onclick="resetCalculator()" class="w-full py-4 bg-gray-200 text-gray-700 rounded-lg font-bold">RESET</button>
+            
+            <p class="text-[9px] text-gray-400 mt-4 text-center">
+                Note: Estimates are pre-tax, and for internal planning purposes only.
+            </p>
         </div>
     </div>
 
     <script>
         const CONFIG = {
-            companyLabel: "YOUR COMPANY NAME HERE", 
-            storageKeyPrefix: "hvac_v1_", 
-            validTokenHash: "aHZhY19zZWN1cmVfMjAyNg==" 
+            companyLabel: "Vozinha's HVAC"
         };
 
         const FIELDS = [
-    { id: 'price', label: 'Price ($)' }, { id: 'commVal', label: 'Commission Value' },
-    { id: 'equipment', label: 'Equip ($)' }, { id: 'materials', label: 'Materials Cost ($)' },
-    { id: 'sub', label: 'Sub/Permit ($)' }, // <--- Changed this label here
-    { id: 'techHours', label: 'Tech Hrs' },
-    { id: 'techRate', label: 'Rate ($)' }, { id: 'driveTime', label: 'Drive Hrs' },
-    { id: 'fleetCost', label: 'Fleet ($)' }, { id: 'overhead', label: 'Overhead ($)' }
-];
-        // Init
+            { id: 'price', label: 'Price ($)' }, { id: 'commVal', label: 'Commission Value' },
+            { id: 'equipment', label: 'Equip ($)' }, { id: 'materials', label: 'Materials Cost ($)' },
+            { id: 'sub', label: 'Sub/Permit ($)' }, { id: 'techHours', label: 'Tech Hrs' },
+            { id: 'techRate', label: 'Tech Rate ($)' }, { id: 'driveHours', label: 'Drive Hrs' },
+            { id: 'fleetRate', label: 'Fleet Rate ($)' }, { id: 'overhead', label: 'Overhead ($)' }
+        ];
+
         window.addEventListener('DOMContentLoaded', () => {
-            const params = new URLSearchParams(window.location.search);
-            if (btoa(params.get('license') || '') === CONFIG.validTokenHash) {
+            const _0x4a21 = "Vk9aSU5IQVNIVkFD";
+            const _0x1a9c = new URLSearchParams(window.location.search);
+            const _0x2b3d = _0x1a9c.get('license');
+
+            if (_0x2b3d && btoa(_0x2b3d) === _0x4a21) {
                 document.getElementById('lockScreen').classList.add('hidden');
                 document.getElementById('appContainer').classList.remove('hidden');
                 document.getElementById('companyName').innerText = CONFIG.companyLabel;
                 
                 const container = document.getElementById('inputFieldsContainer');
-                container.innerHTML = FIELDS.map(f => `<div><label class="text-[9px] font-bold uppercase text-gray-400">${f.label}</label><input type="number" id="${f.id}" oninput="calculate()" class="w-full h-10 p-2 border rounded-lg" placeholder="0"></div>`).join('');
+                container.innerHTML = FIELDS.map(f => `
+                    <div>
+                        <label class="text-[9px] font-bold uppercase text-gray-400">${f.label}</label>
+                        <input type="number" id="${f.id}" oninput="calculate()" class="w-full h-10 p-2 border rounded-lg" placeholder="0">
+                    </div>
+                `).join('');
+                
+                document.getElementById('commType').addEventListener('change', calculate);
                 calculate();
             }
         });
 
+        const fmt = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
+
         function calculate() {
-            const get = (id) => parseFloat(document.getElementById(id).value) || 0;
-            const price = get('price'), commType = document.getElementById('commType').value, commVal = get('commVal');
+            const get = (id) => {
+                const el = document.getElementById(id);
+                if (!el) return 0;
+                let val = parseFloat(el.value) || 0;
+                if (val > 99000000) { val = 99000000; el.value = val; }
+                return val;
+            };
+
+            const price = get('price');
+            const commType = document.getElementById('commType').value;
+            let commVal = get('commVal');
+
+            if (commType === 'percent' && commVal > 100) {
+                commVal = 100;
+                document.getElementById('commVal').value = 100;
+            }
+
             const commPaid = commType === 'percent' ? price * (commVal / 100) : commVal;
             const direct = get('equipment') + get('materials') + get('sub') + (get('techHours') * get('techRate')) + commPaid;
-            const overhead = (get('driveTime') * get('fleetCost')) + get('overhead');
+            const overhead = (get('driveHours') * get('fleetRate')) + get('overhead');
             const net = price - direct - overhead;
             
-            document.getElementById('netProfit').innerText = `$${net.toFixed(2)}`;
-            document.getElementById('gMargin').innerText = ((price-direct)/price*100 || 0).toFixed(1);
-            document.getElementById('nMargin').innerText = (net/price*100 || 0).toFixed(1);
+            const grossMargin = price > 0 ? ((price - direct) / price * 100) : 0;
+            const netMargin = price > 0 ? (net / price * 100) : 0;
+
+            document.getElementById('netProfit').innerText = fmt(net);
+            
+            // Smart Margin Logic: Shows whole numbers cleanly, uses 4 decimals only if needed
+            const formatMargin = (val) => val % 1 === 0 ? val.toFixed(0) : val.toFixed(4);
+            document.getElementById('gMargin').innerText = formatMargin(grossMargin);
+            document.getElementById('nMargin').innerText = formatMargin(netMargin);
             
             const card = document.getElementById('summary');
-            const margin = (net/price*100 || 0);
-            card.className = `p-6 rounded-xl text-white shadow-lg mb-6 ${margin < 10 ? 'bg-red-600' : margin < 20 ? 'bg-amber-500' : 'bg-green-600'}`;
+            if (netMargin < 10) {
+                card.className = "p-6 rounded-xl text-white shadow-lg mb-6 transition-colors duration-300 bg-red-600";
+            } else if (netMargin < 20) {
+                card.className = "p-6 rounded-xl text-white shadow-lg mb-6 transition-colors duration-300 bg-amber-500";
+            } else {
+                card.className = "p-6 rounded-xl text-white shadow-lg mb-6 transition-colors duration-300 bg-green-600";
+            }
         }
 
         function resetCalculator() {
-            FIELDS.forEach(f => document.getElementById(f.id).value = '');
+            FIELDS.forEach(f => {
+                const el = document.getElementById(f.id);
+                if (el) el.value = '';
+            });
             calculate();
         }
     </script>
