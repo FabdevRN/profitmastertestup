@@ -57,7 +57,9 @@
             { id: 'equipment', label: 'Equip ($)' }, { id: 'materials', label: 'Materials Cost ($)' },
             { id: 'sub', label: 'Sub/Permit ($)' }, { id: 'techHours', label: 'Tech Hrs' },
             { id: 'techRate', label: 'Tech Rate ($)' }, { id: 'driveHours', label: 'Drive Hrs' },
-            { id: 'fleetRate', label: 'Fleet Rate ($)' }, { id: 'overhead', label: 'Overhead ($)' }
+            { id: 'fleetRate', label: 'Fleet Rate ($)' }, { id: 'overhead', label: 'Overhead ($)' },
+            { id: 'misc1', label: 'Misc 1 ($)' }, { id: 'misc2', label: 'Misc 2 ($)' },
+            { id: 'misc3', label: 'Misc 3 ($)' }, { id: 'misc4', label: 'Misc 4 ($)' }
         ];
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -106,7 +108,11 @@
 
             const commPaid = commType === 'percent' ? price * (commVal / 100) : commVal;
             const directCosts = get('equipment') + get('materials') + get('sub') + (get('techHours') * get('techRate'));
-            const operatingExpenses = commPaid + (get('driveHours') * get('fleetRate')) + get('overhead');
+            
+            // Operating Expenses now includes Misc 1-4
+            const operatingExpenses = commPaid + (get('driveHours') * get('fleetRate')) + get('overhead') + 
+                                      get('misc1') + get('misc2') + get('misc3') + get('misc4');
+            
             const net = price - directCosts - operatingExpenses;
             
             const grossMargin = price > 0 ? ((price - directCosts) / price * 100) : 0;
@@ -114,7 +120,7 @@
 
             document.getElementById('netProfit').innerText = fmt(net);
             
-            // Fixed double %% issue: removed + "%" here
+            // Format margins correctly without double %% symbols
             const formatMargin = (val) => val % 1 === 0 ? val.toFixed(0) : val.toFixed(4);
             document.getElementById('gMargin').innerText = formatMargin(grossMargin);
             document.getElementById('nMargin').innerText = formatMargin(netMargin);
