@@ -90,7 +90,6 @@
                 const el = document.getElementById(id);
                 if (!el) return 0;
                 let val = parseFloat(el.value) || 0;
-                // Force positive numbers and caps
                 if (val < 0) { val = 0; el.value = 0; }
                 if (val > 99000000) { val = 99000000; el.value = val; }
                 return val;
@@ -115,7 +114,8 @@
 
             document.getElementById('netProfit').innerText = fmt(net);
             
-            const formatMargin = (val) => val % 1 === 0 ? val.toFixed(0) + "%" : val.toFixed(4) + "%";
+            
+            const formatMargin = (val) => val % 1 === 0 ? val.toFixed(0) : val.toFixed(4);
             document.getElementById('gMargin').innerText = formatMargin(grossMargin);
             document.getElementById('nMargin').innerText = formatMargin(netMargin);
             
