@@ -114,7 +114,7 @@
 
             document.getElementById('netProfit').innerText = fmt(net);
             
-            
+            // Fixed double %% issue: removed + "%" here
             const formatMargin = (val) => val % 1 === 0 ? val.toFixed(0) : val.toFixed(4);
             document.getElementById('gMargin').innerText = formatMargin(grossMargin);
             document.getElementById('nMargin').innerText = formatMargin(netMargin);
